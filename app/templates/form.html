@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+<p><a href="javascript:history.go(-1);">Go back</a></p>
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+<div class="col-md-6 col-md-offset-3">
+    {% if menu=='order' and menutab == 'add-update' %}
+    <a class="btn btn-default" href='/recipient/add-update?next=/order/add-update'>Create a new recipient</a>
+    <hr>
+    <p>Or select existing recipient</p>
+    {% endif %}
+{{ wtf.quick_form(form) }}	
+</div>
+
+{% if menu=='order' and menutab == 'add-update' %}
+
+<script type="text/javascript">
+window.onload = function() {
+	$('.form-group:last').append('<div class="form-group" id="recipient_preview">Preview</div>')
+    {#$('#recipient').select2('remove');#}
+	$('#recipient').select2({
+        ajax: {
+            url: '/recipient/search/',
+            dataType: 'json'
+        }
+    });
+	$('#recipient').on('change', function(e) {
+		$('#recipient_preview').html('<span class="glyphicon glyphicon-globe" aria-hidden="true"></span> Loading...');
+		$.getJSON("/recipient/json/" + $('#recipient').val(), function(r) {
+			if(! r) {
+				$('#recipient_preview').html('Error looking up address');
+			} else if(typeof r.name == 'undefined') {
+				$('#recipient_preview').html("Can't find recipient name. Perhaps you should create a recipient first?");
+			} else {
+				$('#recipient_preview').html("Name: " + r.name + "<br>Contact: " + r.contact + "<br>Phone: " + r.phone + "<br>Email: " + r.email + "<br>Street 1: " + r.street1 + "<br>Street 2: " + r.street2 + "<br>City: " + r.city + "<br>State: " + r.state + "<br>Zip/Postal Code: " + r.postal + "<br>Country: " + r.country + "<br><a href='/recipient/add-update?id="+r.id+"' target='_blank'>Edit recipient details (opens in a new window)</a>"
+				);
+			}
+		});
+	});
+	$('#recipient').change();
+};
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{{submenu(menu, 'index')}}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>Name</th>
+            <th>Item #</th>
+            <th>Case Quantity</th>
+            <th>Description</th>
+            <th>Stock (Case)</th>
+            <th>Stock (Units)</th>
+            <th>Total Units</th>
+            <th>Split Case</th>
+            <th>Case Weight (pounds)</th>
+            <th>Re-order Quantity</th>
+            <th>Length (inches)</th>
+            <th>Width (inches)</th>
+            <th>Height (inches)</th>
+            <th>Ship Ready</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for i in inventory %}
+        <tr>
+            <td><a href="/inventory/add-update?id={{i.id}}">Edit</a></td>
+            <td>{{i.name}}</td>
+            <td>{{i.number}}</td>
+            <td>{{i.case_quantity}}</td>
+            <td>{{i.description}}</td>
+            <td>{{i.qoh_case}}</td>
+            <td {% if ((i.qoh_case*i.case_quantity)+i.qoh_units) < i.reorder_quantity %}style="background-color: red"{%endif %}>{{i.qoh_units}}</td>
+            <td>{{i.qoh_case*i.case_quantity+i.qoh_units}}</td>
+            <td><form method="POST">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="split">
+                <input type="hidden" name="id" value="{{i.id}}">
+                <input class="btn btn-default" type="submit" value="Split" {% if i.qoh_case < 1 %} disabled="disabled"{% endif %}>
+            </form></td>
+            <td>{{i.case_weight}}</td>
+            <td>{{i.reorder_quantity}}</td>
+            <td>{{i.length}}</td>
+            <td>{{i.width}}</td>
+            <td>{{i.height}}</td>
+            <td>{%if i.ship_ready%}Yes{%else%}No{%endif%}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

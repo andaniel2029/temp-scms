@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{{submenu(menu, 'index')}}
+
+<div>
+    <h3>Filters</h3>
+    <form class="form-inline" >
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select class="form-control" name="status">
+              <option {% if filters['status'].lower()=='all' %} selected="selected"{% endif %}>All</option>
+              <option {% if filters['status'].lower()=='active' %} selected="selected"{% endif %}>Active</option>
+              <option {% if filters['status'].lower()=='inactive' %} selected="selected"{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-info">Filter</button>
+    </form>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>Adjust Discounts</th>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Company</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Status</th>
+            <th>Roles</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td><a href="/user/add-update?id={{u.id}}">Edit</a></td>
+            <td><a href="/user/discounts?id={{u.id}}">Adjust Discounts</a></td>
+            <td>{{u.id}}</td>
+            <td>{{u.username}}</td>
+            <td>{{u.company}}</td>
+            <td>{{u.first_name}}</td>
+            <td>{{u.last_name}}</td>
+            <td>{{u.is_active()}}</td>
+            <td>{% for role in u.roles %}
+                {{role.name}}
+                {% if not loop.last %}, {% endif %}
+            {% endfor %}</td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

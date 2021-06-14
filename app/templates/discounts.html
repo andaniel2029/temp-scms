@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+<a href="javascript:history.go(-1);">Go back</a>
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+
+<p>User Shipping Discounts</p>
+
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Carrier</th>
+			<th>Service</th>
+			<th>Discount Percentage</th>
+		</tr>
+	</thead>
+{% for c in carrier_services %}
+	<tr>
+		<td>{{c.carrier}}</td>
+		<td>{{c.service}}</td>
+		<td><form method="POST">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="adjust_discount">
+                <input type="hidden" name="carrier" value="{{c.carrier}}">
+                <input type="hidden" name="service" value="{{c.service}}">
+                <input type="hidden" name="id" value="{{user.id}}">
+                <input type="number" name="discount" value="{% for d in user.shipping_discounts %}{% if d.carrier == c.carrier and d.service == c.service %}{{d.discount}}{% endif %}{% endfor %}" placeholder="0">
+                <input class="btn btn-default" type="submit" value="Adjust Discount">
+            </form>
+        </td>
+	</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

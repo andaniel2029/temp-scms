@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+<a href="javascript:history.go(-1);">Go back</a>
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+
+{% if carrier_error_messages%}
+{% for e in carrier_error_messages %}
+<div class="alert alert-info" role="alert">Carrier Error: {{e.carrier}} {{e.type}} {{e.message}}</div>
+{% endfor %}
+{%endif%}
+
+{% if easypost_order %}
+<p>Boxes in this shipment</p>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Box</th>
+			<th>Weight (lbs)</th>
+			<th>Customs Description</th>
+			<th>Customs Value (USD)</th>
+		</tr>
+	</thead>
+	<tbody id="parcels">
+		{% for shipment in easypost_order.shipments %}
+		<tr class="parcel">
+			<td>{{loop.index}}</td>
+			<td><input type="number" value="{{shipment.parcel.weight/16}}" step=".25"></td>
+			<td><input type="text"
+					value="{% if packages[loop.index-1]|length == 4%}{{packages[loop.index-1][2]}}{% endif %}"></td>
+			<td><input type="text"
+					value="{% if packages[loop.index-1]|length == 4%}{{packages[loop.index-1][3]}}{% endif %}"><input
+					type="button" class="add_customs_line" value="+"></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+<input type="button" id="add-box" class="btn btn-regular" value="Add box">
+<input type="button" id="remove-box" class="btn btn-regular" value="Remove box">
+<form method="POST">
+	<input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+	<input type="hidden" name="id" value="{{request.values['id']}}">
+	<input type="hidden" name="action" value="ship">
+	<input type="hidden" name="box_info"
+		value="{% if 'box_info' in request.values %}{{request.values['box_info']}}{% else %}{}{%endif%}">
+	<input type="submit" class="btn btn-regular" value="Update Rates">
+</form>
+
+<script>
+
+	function add_line() {
+		box_number = $('.parcel').length + 1;
+		$('#parcels').append('<tr class="parcel"><td>' + box_number + '</td><td><input type="number" value="0" step=".25"></td><td><input type="text"></td><td><input type="text"><input type="button" class="add_customs_line" value="+"></td></tr>');
+	};
+
+	window.onload = function () {
+
+
+		$('#add-box').on('click', add_line);
+		$('#remove-box').on('click', function () { $('.parcel:last').remove(); });
+		$('input[type=submit]').on('click', function (e) {
+
+			var box_info = '[';
+			var num_parcels = $('.parcel').length;
+			$('.parcel').each(function (index) {
+				pv = $('input[type=text],input[type=number]', this);
+				pv_len = pv.length;
+				pv_items = (pv_len - 1) / 2;
+				box_info = box_info + "[1, " + pv[0].value;
+				for (var i = 1; i <= pv_items; i++) {
+					box_info = box_info + ', "' + pv[i].value + '","' + pv[i + pv_items].value + '"';
+				}
+				box_info = box_info + ']';
+				if (index < num_parcels - 1) { box_info = box_info + ", "; }
+			});
+
+			box_info = box_info + ']';
+			$('input[name=box_info]').val(box_info);
+			//e.preventDefault(); 
+		});
+
+
+		$('.add_customs_line').on('click', function () {
+			$(this).closest('tr').find('td:nth-child(3)').append('<br><input type="text">');
+			$(this).closest('tr').find('td:nth-child(4)').append('<br><input type="text">');
+		});
+
+	}
+
+</script>
+
+{% endif %}
+
+<p>Please select a shipping method or enter shipping method and tracking manually.</p>
+
+<p>The client specified they would like {{order.requested_carrier}} {{order.requested_service}}</p>
+
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Carrier</th>
+			<th>Service</th>
+			<th>List Rate</th>
+			<th>Retail Rate</th>
+			<th>Choose</th>
+		</tr>
+	</thead>
+	{% for rate in rates %}
+
+	{% if rate.service != 'FEDEX_EXPRESS_SAVER' %}
+	<tr>
+		<td>{{rate.carrier}}</td>
+		<td>{{rate.service}}<br>
+			{% if rate.service == 'FEDEX_EXPRESS_SAVER' %}3rd party billing: 308754227
+			{% elif rate.service == 'FEDEX_GROUND' %}Bill Sender 291480179
+			{% elif order.user.username == 'Buffalofoodproducts.com' %}3rd party billing: 210128980
+			{% elif (rate.carrier == 'FedEx' and ( order.requested_service=='FedExMediumBox' or order.requested_service=='FedExSmallBox' or order.requested_service=='FedExPak' or order.requested_service=='FedExEnvelope' ) and rate.custom_predefined_package)%}Bill
+			Sender 242823303
+			{% elif rate.carrier == 'FedEx' %}3rd party billing: 210128980
+			{% else %}No 3rd party billing option set
+			{% endif %}</td>
+		<td>{{(rate.list_rate|float + insurance_cost|float)|string}} {{rate.list_currency}}</td>
+		<td>{{(rate.retail_rate|float + insurance_cost|float)|string}} {{rate.retail_currency}}</td>
+		<td>
+			<form method="POST">
+				<input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+				<input type="hidden" name="action" value="do_ship">
+				<input type="hidden" name="actual_carrier" value="{{rate.carrier}}">
+				<input type="hidden" name="actual_service" value="{{rate.service}}">
+				<input type="hidden" name="id" value="{{order.id}}">
+				<input type="hidden" name="rate_id" value="{{rate.id}}">
+				<input type="hidden" name="box_info"
+					value="{% if 'box_info' in request.values %}{{request.values['box_info']}}{% else %}{%endif%}">
+				<input type="hidden" name="shipment_id" value="{{rate.custom_shipment_id}}">
+				<input type="submit"
+					class="btn {% if ((order.requested_carrier==rate.carrier and order.requested_service == rate.service) or rate.custom_predefined_package) %}btn-success{% else %}btn-regular{%endif%}"
+					value="Pick this rate"> </form>
+		</td>
+
+	</tr>
+
+	{% endif %}
+
+	{% endfor %}
+</table>
+
+Manual shipping
+<form method="POST">
+	<input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+	<input type="hidden" name="action" value="do_ship">
+	<input type="text" name="actual_carrier" placeholder="Carrier">
+	<input type="text" name="actual_service" placeholder="Service">
+	<input type="text" name="tracking" placeholder="Tracking">
+	<input type="hidden" name="id" value="{{order.id}}">
+	<input type="submit" class="btn btn-regular" value="Enter tracking manually">
+</form>
+
+{% endblock %}

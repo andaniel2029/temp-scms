@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{{submenu(menu, 'index')}}
+
+<div>
+    <h3>Filters</h3>
+    <form class="form-inline" >
+        <div class="form-group">
+            <input type="hidden" id="date-start" value="{{ filters['date-range-start'] }}">
+            <input type="text" placeholder="Start Date" name="date-range-start" class="form-control range-start" size="30" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <input type="hidden" id="date-end" value="{{ filters['date-range-end'] }}">
+            <input type="text" placeholder="End Date" name="date-range-end" class="form-control range-end" size="30" autocomplete="off">
+        </div>
+        <span>OR</span>
+        <div class="form-group">
+            <input type="text" value="{{ filters['recipient'] }}" placeholder="Recipient" name="recipient" class="form-control">
+        </div>
+        <div class="form-group">
+            <input type="text" value="{{ filters['customer_reference'] }}" placeholder="Customer PO#/Transaction #" name="customer_reference" class="form-control" size="30">
+        </div>
+        <div class="form-group">
+            <input type="text" value="{{ filters['tracking'] }}" placeholder="Tracking #" name="tracking" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-info">Filter</button>
+    </form>
+</div>
+{{ pagination.info }}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>ID</th>
+            <th>Recipient</th>
+            <th>Created</th>
+            <th>Last Modified</th>
+            <th>Shipped</th>
+            <th>Status</th>
+            <th>Packing Slip</th>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+            <th>Pick Ticket</th>
+            <th>Ship</th>
+            {% endif %}
+            <th>Tracking</th>
+            <th>Customer Reference</th>
+            <th>Cancel / Restore</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td><a href="/order/add-update?id={{o.id}}">Edit</a></td>
+            <td>{{o.id}}</td>
+            <td>{{o.recipient.name}} {{o.recipient.contact}}
+{% if o.recipient.country != 'US' and o.recipient.country != 'United States'  %}<br><strong>International? {{o.recipient.country}}</strong>{%endif%}
+{% if not o.recipient.phone or o.recipient.phone|length < 8 %}<br><span style="color:red;">No recipient phone number (or phone # too short)</span>{%endif%}</td>
+            <td>{{o.created}}</td>
+            <td>{{o.last_modified}}</td>
+            <td>{{o.shipped}}</td>
+            <td>{% if o.status == 1 %}Pending
+            {% elif o.status == 2 %}Shipped
+            {% elif o.status == 3 %}Cancelled
+            {% else %}
+            unknown
+            {% endif %}</td>
+            <td><a href="/order/packing-slip?id={{o.id}}" target="_blank">Packing Slip</a></td>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+                <td><a href="/order/pick-ticket?id={{o.id}}" target="_blank">Pick Ticket</a></td>
+                <td><form method="POST" action="/order/add-update">
+                    <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="ship">
+                    <input type="hidden" name="id" value="{{o.id}}">
+                    <input class="btn btn-default" type="submit" value="Ship">
+                </form></td>
+            {% endif %}
+                <td>{% if o.tracking %}
+                    {% if o.actual_carrier == 'FedEx' %}
+                    <a href="https://www.fedex.com/apps/fedextrack/?tracknumbers={{o.tracking}}" target="_blank">{{o.tracking}}</a>
+                    {% elif o.actual_carrier == 'USPS' %}
+                    <a href="https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1={{o.tracking}}" target="_blank">{{o.tracking}}</a>
+                    {% else %}
+                    {{o.tracking}}
+                    {%endif%}
+                {% endif %}</td>
+                <td>{{o.customer_reference}}</td>
+            <td><form method="POST" action="/order">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="{% if o.status==3%}restore{%else%}cancel{%endif%}">
+                <input type="hidden" name="id" value="{{o.id}}">
+                <input class="btn {% if o.status==3%}btn-default{%else%}btn-danger{%endif%}" type="submit" value="{% if o.status==3%}Restore{%else%}Cancel{%endif%}">
+            </form></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    {{ pagination.links }}
+{% endblock %}

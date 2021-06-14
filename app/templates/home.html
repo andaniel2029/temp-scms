@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if current_user.has_roles('superadmin') or current_user.has_roles('warehouse') %}
+
+<h2>Pending Orders</h2>
+<h3>From All Users, grouped by client</h3>
+
+<div>
+    <h3>Filters</h3>
+    <form class="form-inline" >
+        <div class="form-group">
+            <input type="hidden" id="date-start" value="{{ filters['date-range-start'] }}">
+            <input type="text" placeholder="Start Date" name="date-range-start" class="form-control range-start" size="30" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <input type="hidden" id="date-end" value="{{ filters['date-range-end'] }}">
+            <input type="text" placeholder="End Date" name="date-range-end" class="form-control range-end" size="30" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-info">Filter</button>
+    </form>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>ID</th>
+            <th>Client</th>
+            <th>Recipient</th>
+            <th>Created</th>
+            <th>Last Modified</th>
+            <th>Shipped</th>
+            <th>Status</th>
+            <th>Packing Slip</th>
+            <th>Pick Ticket</th>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+            <th>Ship</th>
+            {% endif %}
+            <th>Cancel / Restore</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td><a href="/order/add-update?id={{o.id}}">Edit</a></td>
+            <td>{{o.id}}</td>
+            <td>{{o.user.username}}</td>
+            <td>{{o.recipient.name}} {{o.recipient.contact}}{% if o.recipient.country != 'US' and o.recipient.country != 'United States'  %}<br><strong>International? {{o.recipient.country}}</strong>{%endif%}{% if not o.recipient.phone or o.recipient.phone|length < 8 %}<br><span style="color:red;">No recipient phone number (or phone # too short)</span>{%endif%}</td></td>
+            <td>{{o.created}}</td>
+            <td>{{o.last_modified}}</td>
+            <td>{{o.shipped}}</td>
+            <td>{% if o.status == 1 %}Pending
+            {% elif o.status == 2 %}Shipped
+            {% elif o.status == 3 %}Cancelled
+            {% else %}
+            unknown
+            {% endif %}</td>
+            <td><a href="/order/packing-slip?id={{o.id}}" target="_blank">Packing Slip</a></td>
+            <td><a href="/order/pick-ticket?id={{o.id}}" target="_blank">Pick Ticket</a></td>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+            <td><form method="POST" action="/order/add-update">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="ship">
+                <input type="hidden" name="id" value="{{o.id}}">
+                <input class="btn btn-default" type="submit" value="Ship">
+            </form></td>
+            {% endif %}
+            <td><form method="POST" action="/order">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="{% if o.status==3%}restore{%else%}cancel{%endif%}">
+                <input type="hidden" name="id" value="{{o.id}}">
+                <input class="btn {% if o.status==3%}btn-default{%else%}btn-danger{%endif%}" type="submit" value="{% if o.status==3%}Restore{%else%}Cancel{%endif%}">
+            </form></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No pending orders</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+ {% else %}
+
+<h2>Pending Orders</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>ID</th>
+            <th>Recipient</th>
+            <th>Created</th>
+            <th>Last Modified</th>
+            <th>Shipped</th>
+            <th>Status</th>
+            <th>Packing Slip</th>
+            <th>Pick Ticket</th>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+            <th>Ship</th>
+            {% endif %}
+            <th>Cancel / Restore</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td><a href="/order/add-update?id={{o.id}}">Edit</a></td>
+            <td>{{o.id}}</td>
+            <td>{{o.recipient.name}} {{o.recipient.contact}}</td>
+            <td>{{o.created}}</td>
+            <td>{{o.last_modified}}</td>
+            <td>{{o.shipped}}</td>
+            <td>{% if o.status == 1 %}Pending
+            {% elif o.status == 2 %}Shipped
+            {% elif o.status == 3 %}Cancelled
+            {% else %}
+            unknown
+            {% endif %}</td>
+            <td><a href="javascript: w=window.open('/order/packing-slip?id={{o.id}}'); w.print();" target="_blank">Packing Slip</a></td>
+            <td><a href="javascript:w=window.open('/order/pick-ticket?id={{o.id}}'); w.print();" target="_blank">Pick Ticket</a></td>
+            {% if current_user.has_role('superadmin') or current_user.has_role('warehouse') %}
+            <td><form method="POST" action="/order/add-update">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="ship">
+                <input type="hidden" name="id" value="{{o.id}}">
+                <input class="btn btn-default" type="submit" value="Ship">
+            </form></td>
+            {% endif %}
+            <td><form method="POST">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="{% if o.status==3%}restore{%else%}cancel{%endif%}">
+                <input type="hidden" name="id" value="{{o.id}}">
+                <input class="btn {% if o.status==3%}btn-default{%else%}btn-danger{%endif%}" type="submit" value="{% if o.status==3%}Restore{%else%}Cancel{%endif%}">
+            </form></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No pending orders</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Low Stock Inventory</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Item #</th>
+            <th>Case Quantity</th>
+            <th>Description</th>
+            <th>Stock (Case)</th>
+            <th>Stock (Units)</th>
+            <th>Split Case</th>
+            <th>Re-order Quantity</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for i in inventory %}
+        <tr>
+            <td>{{i.name}}</td>
+            <td>{{i.number}}</td>
+            <td>{{i.case_quantity}}</td>
+            <td>{{i.description}}</td>
+            <td>{{i.qoh_case}}</td>
+            <td {% if ((i.qoh_case*i.case_quantity)+i.qoh_units) < i.reorder_quantity %}style="background-color: red"{%endif %}>{{i.qoh_units}}</td>
+            <td><form method="POST">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="split">
+                <input type="hidden" name="id" value="{{i.id}}">
+                <input class="btn btn-default" type="submit" value="Split" {% if i.qoh_case < 1 %} disabled="disabled"{% endif %}>
+            </form></td>
+            <td>{{i.reorder_quantity}}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">No low stock inventory</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

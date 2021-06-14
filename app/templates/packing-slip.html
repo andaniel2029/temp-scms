@@ -1,0 +1,40 @@
+<h1>Packing Slip</h1>
+
+{% if order.customer_reference %}<h2>{{order.customer_reference}}</h2>{% endif %}
+
+Ship To:
+
+<pre>
+{{order.recipient.name}}
+{{order.recipient.contact}}
+{{order.recipient.street1}}
+{{order.recipient.street2}}
+{{order.recipient.city}}, {{order.recipient.state}} {{order.recipient.postal}}
+{{order.recipient.country}}
+{{order.recipient.phone}}
+</pre>
+
+<table>
+<tr><th>Item Name</th><th>Item #</th><th>Description</th><th># Cases</th><th># Units</th></tr>
+{% for line in order.line_items %}
+<tr>
+	<td>{{line.item.name}}</td>
+	<td>{{line.item.number}}</td>
+	<td>{{line.item.description}}</td>
+	<td>{{line.quantity_cases}}</td>
+	<td>{{line.quantity_units}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<p>Thank you for your order.</p>
+
+<p><small>
+<script>
+ d = new Date();
+ document.write(d);
+ window.print();
+</script>
+</small></p>

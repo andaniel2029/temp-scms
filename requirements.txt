@@ -1,0 +1,14 @@
+python-dotenv
+sqlalchemy
+wtforms
+Flask>1
+Flask-SQLAlchemy
+Flask-User<0.7
+mysqlclient
+Flask-Admin
+Flask-Bootstrap
+Flask-Migrate
+easypost
+Werkzeug<1.0
+flask-paginate
+email-validator

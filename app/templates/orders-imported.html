@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Orders Imported</h2>
+
+<h3>{{filename}}</h3>
+
+<p>Your order upload has been successfully processed and the resulting orders are pending shipment.</p>
+
+<p>{{orders|length}} orders created</p>
+
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Reference</th>
+            <th>Recipient</th>
+            <th>Created</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td>{{o.id}}</td>
+            <td>{{o.customer_reference}}</td>
+            <td>{{o.recipient.name}} {{o.recipient.contact}}</td>
+            <td>{{o.created}}</td>
+            <td>{% if o.status == 1 %}Pending
+            {% elif o.status == 2 %}Shipped
+            {% elif o.status == 3 %}Cancelled
+            {% else %}
+            unknown
+            {% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/order"  class="btn btn-default" role="button">View all Orders</a>
+
+{% endblock %}

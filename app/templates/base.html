@@ -1,0 +1,203 @@
+{% extends "bootstrap/base.html" %}
+
+{%block title%}PriorityBiz Shipping Platform{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style type="text/css">
+      #username,#password {
+          max-width: 300px;
+      }
+    .col-centered{
+        float: none;
+        margin: 0 auto !important;
+        text-align: center;
+    }
+    .form-field-center {
+        margin: 0 auto;
+    }
+    #export-timeframe{
+        width: 300px;
+    }
+    .range-picker {
+        width: 300px;
+    }
+    </style>
+{% endblock %}
+
+{% block body_attribs %} style="max-width: 1500px;"{% endblock %}
+
+{%block navbar %}
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mk-navbar-collapse-1" aria-expanded="false">
+    <span class="sr-only">Toggle navigation</span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="{{ url_for('home_page') }}">PriorityBiz Shipping{% if current_user.is_authenticated %} ({{current_user.company}}){% endif %}</a>
+    </div>
+  </div>
+
+  <div class="collapse navbar-collapse" id="mk-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li>
+          <a class="nav-link" href={{ url_for('home_page') }}>Home</a>
+        </li>
+        <li>
+          <a class="nav-link" href={{ url_for('order_page') }}>Orders</a>
+        </li>
+        <li>
+          <a class="nav-link" href={{ url_for('inventory_page') }}>Inventory</a>
+        </li>
+        <li>
+          <a class="nav-link" href={{ url_for('recipients_page') }}>Recipients</a>
+        </li>
+{% if current_user.is_authenticated and current_user.has_roles('superadmin') %}
+        <li>
+          <a class="nav-link" href={{ url_for('members_page') }}>Members</a>
+        </li>
+        <li>
+          <a class="nav-link" href={{ url_for('user_page') }}>Users</a>
+        </li>
+        <li>
+          <a class="nav-link" href={{ url_for('easypost_test_label') }}>Test label</a>
+        </li>
+{% endif %}
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+{% if current_user.is_authenticated %}
+        <li>
+          <a class="nav-link" href="/user/sign-out">Sign out ({{current_user.username}})</a>
+        </li>
+{% else %}
+        <li>
+          <a class="nav-link" href="/user/sign-in">Sign in</a>
+        </li>
+{% endif %}
+    </ul>
+  </div>
+</nav>
+{% endblock %}
+
+{% macro submenu(menu, menutab) -%}
+ {% if current_user.has_roles('superadmin') or current_user.has_roles('warehouse') %}
+ <div class="alert alert-success" role="alert">
+ You are a super-user or warehouse staff; {{sudo()|safe}}
+</div>
+ {% endif %}
+ {% if menu == 'inventory' %}
+  <ul class="nav nav-pills">
+    <li role="presentation"{% if not menutab or menutab == 'index' %} class="active"{%endif%}><a href="/inventory">Inventory</a></li>
+    <li role="presentation" {% if menutab == 'add-update' %} class="active"{%endif%}><a href="/inventory/add-update">Create new Inventory Item</a></li>
+    <li role="presentation" {% if menutab == 'import' %} class="active"{%endif%}><a href="/inventory/import">Import Inventory</a></li>
+    <li role="presentation" {% if menutab == 'history' %} class="active"{%endif%}><a href="/inventory/history">Upload History</a></li>
+  </ul>
+ {% elif menu == 'recipient' %}
+  <ul class="nav nav-pills">
+    <li role="presentation"{% if not menutab or menutab == 'index' %} class="active"{%endif%}><a href="/recipient">Recipient</a></li>
+    <li role="presentation" {% if menutab == 'add-update' %} class="active"{%endif%}><a href="/recipient/add-update">Create new Recipient</a></li>
+    <li role="presentation" {% if menutab == 'import' %} class="active"{%endif%}><a href="/recipient/import">Import Recipients</a></li>
+    <li role="presentation" {% if menutab == 'history' %} class="active"{%endif%}><a href="/recipient/history">Upload History</a></li>
+ </ul>
+ {% elif menu == 'order' %}
+  <ul class="nav nav-pills">
+    <li role="presentation"{% if not menutab or menutab == 'index' %} class="active"{%endif%}><a href="/order">Orders</a></li>
+    <li role="presentation" {% if menutab == 'add-update' %} class="active"{%endif%}><a href="/order/add-update">Create new Order</a></li>
+    <li role="presentation" {% if menutab == 'import' %} class="active"{%endif%}><a href="/order/import">Import Orders</a></li>
+    <li role="presentation" {% if menutab == 'export' %} class="active"{%endif%}><a href="javascript:$('#exportOrders').modal();">Export Shipped Orders</a></li>
+    <li role="presentation" {% if menutab == 'history' %} class="active"{%endif%}><a href="/order/history">Upload History</a></li>    
+  </ul>
+
+  <div id="exportOrders" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Export Orders</h4>
+            </div>
+            <div class="modal-body">
+                <p>Which dates would you like to export orders for?</p>
+                <select name="export-timeframe" id="export-timeframe">
+                  <option value="24 hours">Last 24 hours</option>
+                  <option value="7 days">Last 7 days</option>
+                  <option value="30 days">Last 30 days</option>
+                  <option value="60 days">Last 60 days</option>
+                  <option value="all" selected="selected">All Orders</option>
+                  <option value="range">Custom Range</option>
+                </select>
+                <div id="export-range">
+                    <div class="form-group">
+                        <p>Start: <input type="text" name="range-start" class="range-picker range-start form-control" autocomplete="off" size="10"></p>
+                    </div>
+                    <div class="form-group">
+                        <p>End: <input type="text" name="range-end" class="range-picker range-end form-control" autocomplete="off" size="10"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="export-button"  data-dismiss="modal">Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ {% elif menu == 'user' %}
+  <ul class="nav nav-pills">
+    <li role="presentation"{% if not menutab or menutab == 'index' %} class="active"{%endif%}><a href="/user">Users</a></li>
+    <li role="presentation" {% if menutab == 'add-update' %} class="active"{%endif%}><a href="/user/add-update">Create or Update User</a></li>
+  </ul>
+ {% endif %}
+
+{%- endmacro %}
+
+{% block content %}
+{% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+<script>
+  $('#export-button').click(function() {
+    if($('#export-timeframe').val() != 'range') {
+	window.location='/order/export?filter=' + $('#export-timeframe').val();
+    } else {
+        window.location='/order/export?filter=' + $('#export-timeframe').val() + '&range-start=' + $("#export-range .range-start").val()  + '&range-end=' + $("#export-range .range-end").val();
+    }
+    });
+</script>
+<script>
+  $( function() {
+      $('select').select2();
+      $( ".range-start" ).datepicker();
+      $( ".range-start" ).datepicker("option", "dateFormat", "yy-mm-dd" );
+      $(".range-start").each(function() {
+          d1 = $("#date-start").val();
+          if (d1)
+            $(this).datepicker("setDate", new Date(d1) );
+      });
+
+      $( ".range-end" ).datepicker( );
+      $( ".range-end" ).datepicker("option", "dateFormat", "yy-mm-dd");
+      $(".range-end").each(function() {
+          d2 = $("#date-end").val();
+          if (d2)
+            $(this).datepicker("setDate", new Date(d2) );
+
+      });
+    $('#export-timeframe').on('change', function() { if($(this).val() == 'range') {$('#export-range').show(); } else { $('#export-range').hide(); }  });
+    $('#export-range').hide();
+  } );
+  </script>
+{% endblock %}

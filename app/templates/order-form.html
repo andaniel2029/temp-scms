@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+<a href="javascript:history.go(-1);">Go back</a>
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+
+    <h3>Recipient: {{order.recipient.name}} {{order.recipient.contact}} | {{order.recipient.country}}</h3>
+
+<h2>Items on the order</h2>
+
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Number</th>
+			<th>Name</th>
+			<th>Description</th>
+			<th>Quantity (Cases)</th>
+			<th>Quantity (Units)</th>
+			<th></th>
+			<th>Remove</th>
+		</tr>
+	</thead>
+{% for line in order.line_items %}
+	<tr>
+		<td>{{line.item.number}}</td>
+		<td>{{line.item.name}}</td>
+		<td>{{line.item.description}}</td>
+<form method="POST" action="/order/add-update">
+		<td><input type="number" step="1" name="quantity_cases" min="0" max="{{line.item.qoh_case+line.quantity_cases}}" value="{% if line.quantity_cases %}{{line.quantity_cases}}{%else%}0{%endif%}"></td>
+		<td><input type="number" step="1" name="quantity_units" min="0" max="{{(line.item.qoh_case*line.item.case_quantity)+line.item.qoh_units+line.quantity_units}}" value="{% if line.quantity_units %}{{line.quantity_units}}{%else%}0{%endif%}"></td>
+		<td>
+		                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+		                <input type="hidden" name="action" value="adjust_qty">
+		                <input type="hidden" name="id" value="{{order.id}}">
+		                <input type="hidden" name="line_id" value="{{line.id}}">
+		                <input class="btn btn-default" type="submit" value="Save">
+        </td>
+	</form>
+    <td>
+<form method="POST" action="/order/add-update">
+		                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+		                <input type="hidden" name="action" value="remove_line_item">
+		                <input type="hidden" name="id" value="{{order.id}}">
+		                <input type="hidden" name="line_id" value="{{line.id}}">
+		<input type="submit" class="btn btn-danger" value="Remove from Order">    </form></td>
+
+	</tr>
+{% if loop.last %}
+</table>
+<form method="POST" id="order-form-1" action="/order/add-update">
+    <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="select_ship_method">
+    <input type="hidden" name="id" value="{{order.id}}">
+    <input type="submit" class="btn btn-primary" id="order-complete" value="Order Complete">
+</form>
+
+{% endif %}
+{% else %}
+    <tr><td colspan="4">Order is empty</td></tr>
+</table>
+{% endfor %}
+
+
+<h2>Add more to the order.</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Item #</th>
+            <th>Case Quantity</th>
+            <th>Description</th>
+            <th>Stock (Case)</th>
+            <th>Stock (Units)</th>
+            <th>Case Weight (pounds)</th>
+            <th>Re-order Quantity</th>
+            <th>Length (inches)</th>
+            <th>Width (inches)</th>
+            <th>Height (inches)</th>
+            <th>Ship Ready</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for i in inventory %}
+        <tr>
+            <td>{{i.name}}</td>
+            <td>{{i.number}}</td>
+            <td>{{i.case_quantity}}</td>
+            <td>{{i.description}}</td>
+            <td>{{i.qoh_case}}</td>
+            <td {% if ((i.qoh_case*i.case_quantity)+i.qoh_units) < i.reorder_quantity %}style="background-color: red"{%endif %}>{{i.qoh_units}}</td>
+
+            <td>{{i.case_weight}}</td>
+            <td>{{i.reorder_quantity}}</td>
+            <td>{{i.length}}</td>
+            <td>{{i.width}}</td>
+            <td>{{i.height}}</td>
+            <td>{%if i.ship_ready%}Yes{%else%}No{%endif%}</td>
+            <td><form method="POST" action="/order/add-update">
+                <input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="add_to_order">
+                <input type="hidden" name="id" value="{{order.id}}">
+                <input type="hidden" name="line_id" value="{{i.id}}">
+                <input class="btn btn-default" type="submit" value="Add to Order">
+            </form></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+    $("#order-form-1").submit(function () {
+        var total = 0;
+        $('input[name="quantity_cases"],input[name="quantity_units"]').each(function() {
+            total += parseInt($(this).val());
+        });
+        if (total <= 0) {
+            alert('Quantity should be greater than 0');
+            return false;
+        }
+    });
+    </script>
+{% endblock %}

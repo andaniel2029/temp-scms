@@ -1,0 +1,3 @@
+Item Name,Units in Case,Unit Description,Current Quantity Cases,Current Quantity Units,Item #,Case Weight,Re-order Quantity,Length,Width,Height,Ship Ready
+I Name 1,10,test item 1,100,0,IN1,50,10,12,12,12,TRUE
+I Name 2,5,test item 2,0,50,IN2,20,0,5,5,5,FALSE

@@ -1,0 +1,37 @@
+Please note that this message was sent from a notification-only email address that cannot accept incoming mail. Please do not respond to this email.
+
+Dear {%if order.recipient.contact %}{{order.recipient.contact}}{% else %}Customer{%endif%},
+
+Thanks again for your{% if order.blind_company %} {{order.blind_company}}{% else %} {{order.user.company}}{%endif%} order {% if order.customer_reference %}{{order.customer_reference}}{%else%}{{order.id}}{%endif%}.
+
+We're pleased to inform you that your order will ship today with the following item(s):
+
+{% for item in order.line_items %}
+ Item #: {{item.item.number}}
+ Item: {{item.item.name}}
+ Description: {{item.item.description}}
+ Item Qty: {% if item.quantity_cases > 0%}{{item.quantity_cases}} Case(s){% endif %} {%if item.quantity_units > 0 %} {{item.quantity_units}} Unit(s){%endif %}
+
+{% endfor %}
+
+Shipping Information: {{order.actual_carrier}} {{order.actual_service}}
+Tracking Information: {{order.tracking}}
+
+Your shipment will be sent to the following address:
+
+{{order.recipient.contact}} {{order.recipient.name}}
+{{order.recipient.street1}}{% if order.recipient.street2 %}
+{{order.recipient.street2}}{% endif %}
+{{order.recipient.city}}, {{order.recipient.state}} {{order.recipient.postal}}
+{{order.recipient.country}}
+
+If there are any items in your order that are not shipped today, you will receive a similar email notification when they do ship.
+
+If you have any further questions regarding shipping, order status, or payment please contact customer service at {{order.user.email}}.
+
+We appreciate your business.
+
+Sincerely,
+
+{% if order.user.first_name and order.user.last_name %}{{order.user.first_name}} {{order.user.last_name}}{% else %}The Customer Service Team{%endif%}
+{% if order.blind_company %}{{order.blind_company}}{% else %}{{order.user.company}}{%endif%}

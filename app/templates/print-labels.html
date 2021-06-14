@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+
+{% if manual %}As this order was shipped manually there are no labels to print from here. {% else %}
+
+{% if batch %}<a href="/labels/{{batch.id}}" target="_blank" class="btn btn-primary" role="button">ZPL (Zebra Printer) Labels for all packages - may take a few moments to generate</a>{%endif%}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Box #</th>
+            <th>Weight (pounds)</th>
+            <th>Image (PNG)</th>
+            <th>PDF</th>
+            <th>ZPL (Zebra)</th>
+        </tr>
+    </thead>
+
+    <tbody>
+{% for p in shipment.shipments %}
+        <tr>
+            <td>
+                {{loop.index}}
+            </td>
+            <td>
+                {{p.parcel.weight/16}}
+            </td>
+            <td>
+ <a href="{{p.postage_label.label_url}}" target="_blank" class="btn btn-default" role="button">PNG</a>
+            </td>
+            <td>
+ <a href="{{p.postage_label.label_pdf_url}}" target="_blank" class="btn btn-default" role="button">PDF</a>
+            </td>
+            <td>
+ <a href="{{p.postage_label.label_zpl_url}}" target="_blank" class="btn btn-default" role="button">ZPL</a>
+            </td>
+        </tr>
+{% endfor %}
+    </tbody>
+</table>
+
+{% endif %}
+
+{% endblock %}

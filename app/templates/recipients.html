@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<a href="/recipient/add-update">Create new Recipient</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Edit</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Address</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for r in recipients %}
+        <tr>
+            <td><a href="/recipient/add-update?id={{r.id}}">Edit</a></td>
+            <td>{{r.name}}</td>
+            <td>{{r.contact}}</td>
+            <td>{{r.phone}}</td>
+            <td>{% if r.email%}<a href="mailto:{{r.email}}">{{r.email}}</a>{%endif%}</td>
+            <td>{{r.street1}}{% if r.street2 %}<br> {{r.street2}}{%endif%}<br>{{r.city}}, {{r.state}}<br>{{r.postal}}<br>{{r.country}}</td>
+        </tr>
+
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

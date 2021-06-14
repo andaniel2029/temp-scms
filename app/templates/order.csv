@@ -1,0 +1,3 @@
+Order #,Client PO,Shipping Charges,Ordered Date,Shipped Date,Company,Recipient,Shipping Method,Tracking #
+{%for o in orders %}{{o.id}},{{o.customer_reference}},{{o.shipping_cost}},{{o.created}},{{o.shipped}},{{o.recipient.name}},{{o.recipient.contact}},{{o.actual_service}},{{o.tracking}}
+{%endfor%}

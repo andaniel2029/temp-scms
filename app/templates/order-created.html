@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container">
+
+<h2>Order created</h2>
+
+<h3>Recipient: {{order.recipient.name}} {{order.recipient.contact}} | {{order.recipient.country}}</h3>
+
+<p>System Order ID: {{order.id}}
+
+<br>Total Weight: {{total_weight}}
+<br>Total Packages: {{total_packages}}
+<br>Insurance Cost: {{insurance_cost}}</p>
+
+<p>Shipment contents</p>
+
+<table class="table table-striped">
+	<thead>
+		<tr><th>Item Name</th><th>Item #</th><th>Description</th><th># Cases</th><th># Units</th></tr>
+	</thead>
+{% for line in order.line_items %}
+<tr>
+	<td>{{line.item.name}}</td>
+	<td>{{line.item.number}}</td>
+	<td>{{line.item.description}}</td>
+	<td>{{line.quantity_cases}}</td>
+	<td>{{line.quantity_units}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<p>Your order has been successfully entered into the system and is pending shipment.</p>
+
+<a href="/order/add-update"  class="btn btn-default" role="button">Create another New Order</a>
+    </div>
+
+{% endblock %}

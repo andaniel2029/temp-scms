@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{{submenu(menu, 'history')}}
+
+<div>
+    <h3>Filters</h3>
+    <form class="form-inline" >
+        <div class="form-group">
+            <input type="hidden" id="date-start" value="{{ filters['date-range-start'] if filters }}">
+            <input type="text" placeholder="Start Date" name="date-range-start" class="form-control range-start" size="30" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <input type="hidden" id="date-end" value="{{ filters['date-range-end'] if filters }}">
+            <input type="text"  placeholder="End Date" name="date-range-end" class="form-control range-end" size="30" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-info">Filter</button>
+    </form>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Created</th>
+            <th>User</th>
+            <th>Filename</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for u in uploads %}
+        {% if u.kind == menu %}
+        <tr>
+            <td>{{u.created}}</td>
+            <td>{{u.user.username}}</td>
+            <td><a href="/files/{{u.id}}" target="_blank">{{u.filename}}</a></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

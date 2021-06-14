@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if not current_user.is_authenticated %}
+Welcome. Please sign in to use the system.
+{% else %}
+ {% if current_user.has_roles('superadmin') or current_user.has_roles('warehouse') %}
+ 	// pending orders
+ {% else %}
+ 	// pending orders, low inventory items
+ {% endif %}
+{% endif %}
+
+{% endblock %}

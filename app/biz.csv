@@ -1,0 +1,3 @@
+Transaction ID,Item,Unit of Measure,Quantity,Insured Value,Carrier,Shipping Method,Company Name,Contact Name,Phone,Email,Address 1,Address 2,City,State Code,Zip,Country Code,Residential,Signature Option,Blind Shipper Name,Blind Shipper Phone
+A1BC777,23456,U,2,0,FEDEX,FEDEXGROUND,,Test Contact,(716) 999-9999,rob@prioritybiz.com,234 Maple,Bldg #1,Amherst,NY,14226,US,N,,B & C Company,999-999-9999
+

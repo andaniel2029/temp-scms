@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{{submenu(menu, menutab)}}
+
+<a href="javascript:history.go(-1);">Go back</a>
+
+{% if message %}<div class="alert alert-info" role="alert">{{message}}</div>{% endif %}
+
+{% if carrier_error_messages%}
+{% for e in carrier_error_messages %}
+<div class="alert alert-info" role="alert">Carrier Error: {{e.carrier}} {{e.type}} {{e.message}}</div>
+{% endfor %}
+{%endif%}
+
+<div class="container">
+    <h3>Recipient: {{order.recipient.name}} {{order.recipient.contact}} | {{order.recipient.country}}</h3>
+<br>Total Weight: {{total_weight}}
+<br>Total Packages: {{total_packages}}
+<br>Insurance Cost: {{insurance_cost}} (built in to rates below)</h3>
+
+<p>Shipment contents</p>
+
+<table class="table table-striped">
+	<thead>
+		<tr><th>Item Name</th><th>Item #</th><th>Description</th><th># Cases</th><th># Units</th></tr>
+	</thead>
+{% for line in order.line_items %}
+<tr>
+	<td>{{line.item.name}}</td>
+	<td>{{line.item.number}}</td>
+	<td>{{line.item.description}}</td>
+	<td>{{line.quantity_cases}}</td>
+	<td>{{line.quantity_units}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<hr>
+
+<form method="POST">
+	<input name=_csrf_token type="hidden" value="{{ csrf_token() }}">
+	<input type="hidden" name="action" value="pick_rate">
+    <input type="hidden" name="id" value="{{order.id}}">
+
+<div class="container">
+
+    <p>With FedEx or USPS Priority Mail parcel insurance for the first $100.00 is included at no extra cost. Additional insurance is available at additional cost (shown on the next page). To add additional insurance input the total declared value of this shipment. Leave blank for default insurance (if any)</p>
+    <p><input type="number" name="insurance_value" min="0" max="5000"></p>
+    <p>If this shipment <strong>requires a signature</strong> upon delivery, select the desired signature option from the below list.</p>
+<table class="table table-striped">
+    <tr>
+        <td><input type="radio" name="signature_option" value="NO_SIGNATURE" checked="checked">&nbsp;No Signature Required</td>
+    </tr><tr>
+        <td><input type="radio" name="signature_option" value="DIRECT_SIGNATURE">&nbsp;Direct Signature Required (anyone at delivery address)</td>
+    </tr><tr>
+        <td><input type="radio" name="signature_option" value="ADULT_SIGNATURE">&nbsp;Adult Signature required (at delivery address, must show ID)</td>
+    </tr>
+</table>    <p>Note: Additional Carrier fees for signature required services will be applied when shipment is processed.</p>
+<hr>
+<div class="col-md-6">
+<p>Please select a shipping method</p>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Carrier</th>
+			<th>Service</th>
+			<th>List Rate</th>
+		</tr>
+	</thead>
+{% for rate in rates %}
+
+{% if rate.service != 'FEDEX_EXPRESS_SAVER' %}
+	<tr>
+		<td><input type="radio" name="carrier_service" value="{{rate.carrier}},{{rate.service}}"></td>
+		<td>{{rate.carrier}}</td>
+		<td>{{rate.service}}</td>
+        {% set r = rate.list_rate|float*(1-discounts[rate.carrier][rate.service]/100) + insurance_cost|float %}
+        <td>{{'%0.2f' % r | float}} {{rate.list_currency}}</td>
+	</tr>
+{% endif %}
+
+{% endfor %}
+</table>
+	
+</div>	
+<div class="col-md-6">
+	<div class="form-group">
+		<label for="customer_reference">Shipment Identifier/Reference</label>
+	<input type="text" name="customer_reference" class="form-control">
+	</div>
+Shipment Recipient
+	<a href="mailto:{{order.recipient.email}}">{{order.recipient.email}}</a> 
+
+	<div class="form-group">
+		<label for="notify_recipient">Check to receive a copy of this shipment's notifications</label>
+	<input type="checkbox" name="notify_recipient" value="True" class="form-control"></input>
+	</div>
+
+	<div class="form-group">
+		<label for="additionally_notify">	Additionally Notify (email)</label>
+			<input type="email" name="additionally_notify" class="form-control">
+	</div>
+	
+	<div class="form-group">
+		<label for="blind_company">Ship From Company</label>
+	<input type="text" name="blind_company" value="{{current_user.company}}" class="form-control">	</div>
+	<div class="form-group">
+		<label for="blind_phone">Ship From Phone</label>
+		<input type="text" name="blind_phone" value="{{current_user.phone}}" class="form-control"> <!-- TODO: These fill in for current_user, not sudo users -->
+	</div>
+</div>
+<div class="col-md-6">
+	<input type="submit" class="btn btn-primary" value="Submit Shipment"> 
+</div>
+</div>
+
+</form>
+{% endblock %}

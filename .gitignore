@@ -1,0 +1,12 @@
+creds.txt
+private/
+errors.txt
+.idea
+__pycache__/  # Exclude the whole folder
+*.save
+.env
+*.pyc
+*.pyo
+*.pyd
+backup.sql
+pb.pem

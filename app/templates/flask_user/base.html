@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PriorityBiz Shipping</title>
+
+    <!-- Bootstrap -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- In-lining styles to avoid needing a separate .css file -->
+    <style>
+        hr { border-color: #cccccc; margin: 0; }
+        .no-margins { margin: 0px; }
+        .with-margins { margin: 10px; }
+        .col-centered { float: none; margin: 0 auto; }
+    </style>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
+    <![endif]-->
+  </head>
+
+
+<body>
+    {% block body %}
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mk-navbar-collapse-1" aria-expanded="false">
+    <span class="sr-only">Toggle navigation</span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="{{ url_for('home_page') }}">PriorityBiz Shipping{% if current_user.is_authenticated %} ({{current_user.company}}){% endif %}</a>
+    </div>
+  </div>
+
+  <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li>
+          <a class="nav-link" href={{ url_for('home_page') }}>Home</a>
+        </li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+            {% if call_or_get(current_user.is_authenticated) %}
+                <li><a class="nav-link" href="{{ url_for('user.logout') }}">Sign out</a></li>
+            {% else %}
+                <li><a class="nav-link" href="{{ url_for('user.login') }}">Sign in</a></li>
+            {% endif %}
+    </ul>
+  </div>
+</nav>
+
+    <div id="main-div" class="with-margins">
+    {# One-time system messages called Flash messages #}
+    {% block flash_messages %}
+        {%- with messages = get_flashed_messages(with_categories=true) -%}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category=='error' %}
+                        {% set category='danger' %}
+                    {% endif %}
+                    <div class="alert alert-{{category}}">{{ message|safe }}</div>
+                {% endfor %}
+            {% endif %}
+        {%- endwith %}
+    {% endblock %}
+
+    {% block main %}{% block content %}{% endblock %}{% endblock %}
+    </div>
+
+{#    <br/>#}
+{#    <hr class="no-margins"/>#}
+{#    <div id="footer-div" class="clearfix with-margins">#}
+{#        <div class="pull-left">PriorityBiz Shipping</div>#}
+{#        <div class="pull-right">&copy; 2020 PriorityBiz</div>#}
+{#    </div>#}
+    {% endblock %}
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  </body>
+</html>
