@@ -10,3 +10,4 @@ __pycache__/  # Exclude the whole folder
 *.pyd
 backup.sql
 pb.pem
+/venv
